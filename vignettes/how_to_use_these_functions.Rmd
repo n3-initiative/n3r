@@ -1,0 +1,59 @@
+---
+title: "An overview of the functions in this package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{how_to_use_these_functions}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(n3r)
+library(dplyr)
+library(tibble)
+```
+
+## vlookup 
+
+This mimics Excel's `vlookup()` function - this is most handy when you just want to 'look up' one value from another dataframe. It's more intuitive than a join followed by dropping a bunch of columns. 
+
+Consider a master dataframe with these variables.
+
+```{r}
+big <- mtcars %>% 
+  rownames_to_column() %>% 
+  rename(car = rowname)
+
+big %>% 
+  head()
+```
+
+Now suppose you only have 3 of these cars with `mpg` and `cyl` information. You want to `look up` the original dataframe and add a `disp` column.
+
+```{r}
+small <- big %>% 
+  head(3) %>% 
+  select(car, mpg, cyl)
+small
+```
+
+You would typically do this, but we're saddled with several superfluous columns. 
+
+```{r}
+small %>% 
+  left_join(big) 
+```
+
+Instead, we can do 
+
+```{r}
+small %>% 
+  mutate(displacement = vlookup(this = car, df = big, key = 'car', value = 'disp'))
+```
+
+This is very fast because it runs on base R and it is clean and intuitive! 
